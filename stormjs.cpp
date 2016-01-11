@@ -1,19 +1,17 @@
 #include "scanner.h"
+#include "parser.h"
 #include "cstdlib"
 
 int main(){
     FILE* file = fopen("function.js", "r");
-    Scanner scanner(file);
-	while (1){
-		Token token = scanner.getToken();
-		if (token.type == ERROR){
-			fprintf(stderr, "\nline %d error: in char %c\n", scanner.getLine(), scanner.getNowChar());
-			break;
-		}
-		if (token.type == ENDFILE){
-			fprintf(stderr, "\nsuceed in scanning\n");
-			break;
-		}
-	};
+	Parser* parser = new Parser(file);
+	try{
+		TreeNode* node = parser->syStatement();
+		fprintf(stderr, "\nsucceeding in parsing !\n");
+	}
+	catch (ParserException &e){
+		parser->printError();
+	}
+	delete parser;
 	return 0;
 }

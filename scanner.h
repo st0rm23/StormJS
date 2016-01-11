@@ -1,35 +1,8 @@
 #ifndef _SCANNER_H_
 #define _SCANNER_H_
 
-#include <string>
-#include <cstdio>
+#include "global.h"
 
-using namespace std;
-
-typedef enum{
-	/* book-kepping tokens */
-	ENDFILE, ERROR,
-	/* reserved words */
-	BREAK, CASE, CATCH, CONTINUE, DEFAULT, DELETE, DO,
-	FINALLY, FOR, FUNCTION, IF, IN, INSTANCEOF, NEW, RETURN,
-	SWITCH, THIS, THROW, TRY, TYPEOF, VAR, VOID, WHILE, WITH,
-	ABSTRACT, BOOLEAN, TYPE, CHAR, CLASS, CONST, DEBUGGER, DOUBLE,
-	ENUM, EXPORT, EXTENDS, FINAL, FLOAT, GOTO, IMPLEMENTS, IMPORT,
-	INT, INTERFACE, LONG, MATIVE, PACKAGE, PRIVATE, PROTECTED, PUBLIC,
-	SHROT, STATIC, SUPER, SYNCHRONIZED, THROWS, TRANSIENT, VOLATILE,
-	/* muilticharacter tokens */
-	ID, INTEGER, DECIMAL, HEX, STRING, CHARACTER,
-	/* spectial symbols */
-	//<,  >,      +,     -,     *,    !     /,   %   |    ^    &    ||     &&
-	LESS, GREAT, PLUS, MINUS, TIMES, NOT, OVER, MOD, OR, XOR, AND, OROR, ANDAND,
-	//==,   !=,        <<,    >>,        <=,       >=,         ++       --
-	EQUAL, UNEQUAL, LSHIFT, RSHIFT, LESSEUQAL, GREATQUAL, INCREASE, DECREASE,
-	// +=      -=            *=      /=       %=         |=       ^=           &=
-	PASSIGN, MINUSASSIGN, TASSIGN, OASSIGN, MODASSIGN, ORASSIGN, XORASSIGN, ANDASSIGN,
-	// =       {	 }       (        )       [       ]     ;     .    ,      :
-	ASSIGN,  LPBIG, RPBIG, LPSMALL, RPSMALL, LPMID, RPMID, SEMI, DOT, COMMA, COLON
-
-} TokenType;
 
 typedef enum {
 			START, INOVER, INCOMMENT1, INCOMMENT21, INCOMMENT22,
@@ -40,12 +13,6 @@ typedef enum {
 			INPLUS, INMINUS, INTIMES, INMOD,
 			DONE, INERROR
 		} StateType;
-
-struct Token
-{
-	TokenType type;
-	string value;
-};
 
 
 class Scanner{

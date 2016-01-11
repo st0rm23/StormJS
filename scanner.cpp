@@ -110,6 +110,12 @@ Token Scanner::getToken(){
                     case ':':
                         token.type = COLON;
                         break;
+                    case '?':
+                        token.type = QUES;
+                        break;
+                    case '~':
+                        token.type = REVERSE;
+                        break;
                     default:
                         state = INERROR;
                         token.type = ERROR;
@@ -528,6 +534,11 @@ TokenType Scanner::resevedLookup(const string &str){
     if (str == "throws") return THROWS;
     if (str == "transient") return TRANSIENT;
     if (str == "volatile") return VOLATILE;
+    if (str == "true") return VBOOLEAN;
+    if (str == "false") return VBOOLEAN;
+    if (str == "null") return EMPTY;
+    if (str == "undefined") return EMPTY;
+    if (str == "NaN") return EMPTY;
     return ID;
 }
 
@@ -592,9 +603,12 @@ string Scanner::getTokenName(TokenType type){
         case DOT: return "DOT";
         case COMMA: return "COMMA";
         case COLON: return "COLON";
+        case QUES: return "QUES";
         case ENDFILE: return "ENDFILE";
         case ERROR: return "ERROR";
 
+        case BOOLEAN: return "BOOLEAN";
+        case EMPTY: return "EMPTY";
         case BREAK: return "BREAK";
         case CASE: return "CASE";
         case CATCH: return "CATCH";
@@ -620,7 +634,7 @@ string Scanner::getTokenName(TokenType type){
         case WHILE: return "WHILE";
         case WITH: return "WITH";
         case ABSTRACT: return "ABSTRACT";
-        case BOOLEAN: return "BOOLEAN";
+        case VBOOLEAN: return "VBOOLEAN";
         case TYPE: return "TYPE";
         case CHAR: return "CHAR";
         case CLASS: return "CLASS";
