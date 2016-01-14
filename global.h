@@ -19,7 +19,7 @@ typedef enum{
 	BitwiseXOROperator, BitwiseANDOperator, EqualityOperator, RelationalOperator,
 	ShiftOperator, AdditiveOperator, MultiplicativeOperator, UnaryOperator, PostfixOperator,
 	AssignmentOperator ,VariableStatement, VariableDeclarationList, VariableDeclaration,
-	Initialiser, PrimaryExpression, Literal, ArrayLiteral
+	Initialiser, PrimaryExpression, Literal, ArrayLiteral, Program
 } NodeKind;
 
 typedef enum{
@@ -34,7 +34,8 @@ typedef enum{
 	INT, INTERFACE, LONG, MATIVE, PACKAGE, PRIVATE, PROTECTED, PUBLIC,
 	SHROT, STATIC, SUPER, SYNCHRONIZED, THROWS, TRANSIENT, VOLATILE,
 	/* muilticharacter tokens */
-	ID, INTEGER, DECIMAL, HEX, STRING, CHARACTER, VBOOLEAN, EMPTY,
+	ID, INTEGER, DECIMAL, HEX, STRING, VBOOLEAN, 
+	INF, NANUMBER, UNDEFINED, NIL,
 	/* spectial symbols */
 	//<,  >,      +,     -,     *,    !     /,   %   |    ^    &    ||     &&
 	LESS, GREAT, PLUS, MINUS, TIMES, NOT, OVER, MOD, OR, XOR, AND, OROR, ANDAND,
@@ -66,6 +67,8 @@ public:
 };
 
 
+class ScannerException : public exception{};
 class ParserException : public exception{};
+class ExpressionException : public exception{};
 
 #endif

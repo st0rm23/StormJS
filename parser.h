@@ -59,14 +59,15 @@ public:
     TreeNode* syUnaryOperator();
     TreeNode* syPostfixExpression();
     TreeNode* syPostfixOperator();
-    TreeNode* Parser::syVariableStatement();
-    TreeNode* Parser::syVariableDeclarationList();
-    TreeNode* Parser::syVariableDeclaration();
-    TreeNode* Parser::syInitialiser();
-    TreeNode* Parser::syPrimaryExpression();
-    TreeNode* Parser::syLiteral();
-    TreeNode* Parser::syArrayLiteral();
-    TreeNode* Parser::syElision();
+    TreeNode* syVariableStatement();
+    TreeNode* syVariableDeclarationList();
+    TreeNode* syVariableDeclaration();
+    TreeNode* syInitialiser();
+    TreeNode* syPrimaryExpression();
+    TreeNode* syLiteral();
+    TreeNode* syArrayLiteral();
+    TreeNode* syElision();
+	TreeNode* syProgram();
 };
 
 

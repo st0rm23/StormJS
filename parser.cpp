@@ -79,7 +79,7 @@ TreeNode* Parser::sySourceElements(){
     TreeNode* t = new TreeNode(scanner->getLine(), SourceElements);
     TreeNode* c = NULL;
     c = t->child = sySourceElement();
-    while (token.type != RPBIG)
+	while (token.type != RPBIG && token.type != ENDFILE)
         c = c->sibling = sySourceElement();
     return t;
 }
@@ -552,6 +552,7 @@ TreeNode* Parser::syMultiplicativeExpression(){
             case MOD:
                 c = c->sibling = syMultiplicativeOperator();
                 c = c->sibling = syUnaryExpression();
+				break;
             default:
                 yes = false;
                 break;
@@ -791,7 +792,7 @@ TreeNode* Parser::syLiteral(){
     return t;
 }
 
-TreeNode* Parser::syArrayLiteral(){      //ArrayLiteral -> '[' Elision ?      ']'
+TreeNode* Parser::syArrayLiteral(){
     TreeNode* t = new TreeNode(scanner->getLine(), ArrayLiteral);
     TreeNode* c = NULL;
     match(LPMID);
@@ -820,5 +821,14 @@ TreeNode* Parser::syElision(){
 		t->token.value += ',';
         match(COMMA);
     }
+    return t;
+}
+
+TreeNode* Parser::syProgram(){
+    TreeNode* t = new TreeNode(scanner->getLine(), Program);
+    TreeNode* c = NULL;
+    if (token.type != ENDFILE)
+        c = t->child = sySourceElements();
+    match(ENDFILE);
     return t;
 }
