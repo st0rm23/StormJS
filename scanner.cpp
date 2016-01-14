@@ -59,8 +59,8 @@ Token Scanner::getToken(){
                 else if (c == '0') state = INNUM_HEX0;
                 else if ('1' <= c && c <= '9') state = INNUM0;
                 else if (isAlpha(c)) state = INID;
-                else if (c == '\"') {save = false; state = INSTRING;}
-                else if (c == '\'') {save = false; state = INCHAR0;}
+                else if (c == '\"') { save = false; state = INSTRING10;}
+				else if (c == '\'') { save = false; state = INSTRING20; }
                 else if (c == '/') state = INOVER;
                 else if (c == '&') state = INAND;
                 else if (c == '|') state = INOR;
@@ -243,38 +243,115 @@ Token Scanner::getToken(){
                     token.type = ID;
                 }
                 break;
-            case INSTRING:
-                if (c != '\"') state = INSTRING;
-                else {
+            case INSTRING10:
+                if (c != '\"' && c != '\\') state = INSTRING10;
+				else if (c == '\"'){
                     save = false;
                     state = DONE;
                     token.type = STRING;
+                } else if (c == '\\'){
+					save = false;
+					state = INSTRING11;
+				} else {
+					save = false;
+					state = INERROR;
+				}
+                break;
+            case INSTRING20:
+				if (c != '\'' && c != '\\') state = INSTRING20;
+				else if (c == '\''){
+					save = false;
+					state = DONE;
+					token.type = STRING;
+				}
+				else if (c == '\\'){
+					save = false;
+					state = INSTRING21;
+				}
+				else {
+					save = false;
+					state = INERROR;
+				}
+                break;
+
+            case INSTRING11:
+                switch (c) {
+                    case '\'':
+                        state = INSTRING10;
+                        break;
+                    case '\"':
+                        state = INSTRING10;
+                        break;
+                    case '&':
+                        state = INSTRING10;
+                        break;
+                    case '\\':
+                        state = INSTRING10;
+                        break;
+                    case 'n':
+                        state = INSTRING10;
+                        c = '\n';
+                        break;
+                    case 'r':
+                        state = INSTRING10;
+                        c = '\r';
+                        break;
+                    case 't':
+                        state = INSTRING10;
+                        c = '\t';
+                        break;
+                    case 'b':
+                        state = INSTRING10;
+                        c = '\b';
+                        break;
+                    case 'f':
+                        state = INSTRING10;
+                        c = '\f';
+                        break;
+                    default:
+                        save = false;
+                        state = INERROR;
+                        break;
                 }
                 break;
-            case INCHAR0:
-                if (c == '\\') state = INCHAR1;
-                else if (c != '\\' && c != '\'') state = INCHAR2;
-                else {
-                    save = false;
-                    state = INERROR;
-                }
-                break;
-            case INCHAR1:
-                if (c != '\'' && c != '\\') state = INCHAR2;
-                else {
-                    save = false;
-                    state = INERROR;
-                }
-                break;
-            case INCHAR2:
-                if (c == '\'') {
-                    save = false;
-                    state = DONE;
-                    token.type = CHARACTER;
-                }
-                else {
-                    save = false;
-                    state = INERROR;
+            case INSTRING21:
+                switch (c) {
+                    case '\'':
+                        state = INSTRING20;
+                        break;
+                    case '\"':
+                        state = INSTRING20;
+                        break;
+                    case '&':
+                        state = INSTRING20;
+                        break;
+                    case '\\':
+                        state = INSTRING20;
+                        break;
+                    case 'n':
+                        state = INSTRING20;
+                        c = '\n';
+                        break;
+                    case 'r':
+                        state = INSTRING20;
+                        c = '\r';
+                        break;
+                    case 't':
+                        state = INSTRING20;
+                        c = '\t';
+                        break;
+                    case 'b':
+                        state = INSTRING20;
+                        c = '\b';
+                        break;
+                    case 'f':
+                        state = INSTRING20;
+                        c = '\f';
+                        break;
+                    default:
+                        save = false;
+                        state = INERROR;
+                        break;
                 }
                 break;
             case INAND:
@@ -536,9 +613,10 @@ TokenType Scanner::resevedLookup(const string &str){
     if (str == "volatile") return VOLATILE;
     if (str == "true") return VBOOLEAN;
     if (str == "false") return VBOOLEAN;
-    if (str == "null") return EMPTY;
-    if (str == "undefined") return EMPTY;
-    if (str == "NaN") return EMPTY;
+    if (str == "null") return NIL;
+    if (str == "undefined") return UNDEFINED;
+	if (str == "NaN") return NANUMBER;
+	if (str == "Infinity") return INF;
     return ID;
 }
 
@@ -562,7 +640,10 @@ string Scanner::getTokenName(TokenType type){
         case DECIMAL: return "DECIMAL";
         case HEX: return "HEX";
         case STRING: return "STRING";
-		case CHARACTER: return "CHARACTER";
+		case NIL: return "NULL";
+		case UNDEFINED: return "UNDEFINED";
+		case NANUMBER: return "NAN";
+		case INF: return "INFINITY";
         case LESS: return "LESS";
         case GREAT: return "GREAT";
         case PLUS: return "PLUS";
@@ -608,7 +689,6 @@ string Scanner::getTokenName(TokenType type){
         case ERROR: return "ERROR";
 
         case BOOLEAN: return "BOOLEAN";
-        case EMPTY: return "EMPTY";
         case BREAK: return "BREAK";
         case CASE: return "CASE";
         case CATCH: return "CATCH";

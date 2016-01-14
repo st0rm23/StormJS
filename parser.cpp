@@ -740,9 +740,11 @@ TreeNode* Parser::syPrimaryExpression(){
         case DECIMAL:
         case HEX:
         case STRING:
-        case CHARACTER:
-        case VBOOLEAN:
-        case EMPTY:
+		case VBOOLEAN:
+		case NIL:
+		case NANUMBER:
+		case UNDEFINED:
+		case INF:
             c = t->child = syLiteral();
             break;
         case LPMID:
@@ -777,15 +779,21 @@ TreeNode* Parser::syLiteral(){
 		case STRING:
 			match(STRING);
 			break;
-		case CHARACTER:
-			match(CHARACTER);
-			break;
 		case VBOOLEAN:
 			match(VBOOLEAN);
 			break;
-		case EMPTY:
-			match(EMPTY);
-            break;
+		case NIL:
+			match(NIL);
+			break;
+		case NANUMBER:
+			match(NANUMBER);
+			break;
+		case UNDEFINED:
+			match(UNDEFINED);
+			break;
+		case INF:
+			match(INF);
+			break;
         default:
             throw ParserException();
     }
