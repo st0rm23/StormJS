@@ -7,25 +7,50 @@ Variable* Expression::opAssign(Variable *&a, TokenType op, Variable *b){
             res = Variable::assign(&a, b);
             break;
         }
-        case PASSIGN :                 //    +=
+		case PASSIGN: {                //    +=
+			Variable* tmp = opAdditive(a, TokenType::PLUS, b);
+			res = Variable::assign(&a, tmp);
+			tmp->release();
+			break;
+		}
         case MINUSASSIGN :{            //    -=
-            Variable* tmp = opAdditive(a, op, b);
+			Variable* tmp = opAdditive(a, TokenType::MINUS, b);
 			res = Variable::assign(&a, tmp);
             tmp->release();
             break;
         }
-        case TASSIGN :                 //    *=
-        case OASSIGN :                 //    /=
+		case TASSIGN:{              //    *=
+			Variable* tmp = opMultiplicative(a, TokenType::TIMES, b);
+			res = Variable::assign(&a, tmp);
+			tmp->release();
+			break;
+		}                
+		case OASSIGN: {              //    /=
+			Variable* tmp = opMultiplicative(a, TokenType::OVER, b);
+			res = Variable::assign(&a, tmp);
+			tmp->release();
+			break;
+		}                
         case MODASSIGN :{              //    %=
-            Variable* tmp = opMultiplicative(a, op, b);
+			Variable* tmp = opMultiplicative(a, TokenType::MOD, b);
 			res = Variable::assign(&a, tmp);
             tmp->release();
             break;
         }
-        case ORASSIGN :                //    |=
-        case XORASSIGN :               //    ^=
+        case ORASSIGN : {              //    |=
+			Variable* tmp = opMultiplicative(a, TokenType::OR, b);
+			res = Variable::assign(&a, tmp);
+            tmp->release();
+            break;
+        }
+        case XORASSIGN :{              //    ^=
+			Variable* tmp = opMultiplicative(a, TokenType::XOR, b);
+			res = Variable::assign(&a, tmp);
+            tmp->release();
+            break;
+        }
         case ANDASSIGN :{              //    &=
-            Variable * tmp = opLogical(a, op, b);
+			Variable * tmp = opLogical(a, TokenType::AND, b);
 			res = Variable::assign(&a, tmp);
             tmp->release();
             break;
@@ -215,8 +240,10 @@ Variable* Expression::opAdditive(Variable *a, TokenType op, Variable *b){
 		VarNumber* tmp = new VarNumber();
 		VarNumber* ta = a->toVarNumber();
 		VarNumber* tb = b->toVarNumber();
-        if (ta->numType == VarNumber::NANUMBER || tb->numType == VarNumber::NANUMBER)
+		if (ta->numType == VarNumber::NANUMBER || tb->numType == VarNumber::NANUMBER){
 			tmp->numType = VarNumber::NANUMBER;
+			res = tmp;
+		}
         else {
             switch (op){
                 case MINUS :                  // -
@@ -371,17 +398,26 @@ Variable* Expression::opUnary(TokenType op, Variable *a){
     return res;
 }
 
-Variable* Expression::opPostfix(Variable *a, TokenType op){
-    Variable* res;
+Variable* Expression::opPostfix(Variable *&a, TokenType op){
     VarNumber* tmp = new VarNumber();
     tmp->value = 1;
+    Variable* res = a;
+    res->retain();
     switch (op){
-        case INCREASE :                //    ++
-            res = opAdditive(a, TokenType::PLUS, tmp);
+        case INCREASE : {               //    ++
+            Variable* tt = opAdditive(a, TokenType::PLUS, tmp);
+			Variable* tt2 = Variable::assign(&a, tt);
+            tt->release();
+            tt2->release();
             break;
-        case DECREASE :                //    --
-            res = opAdditive(a, TokenType::MINUS, tmp);
+        }
+        case DECREASE :{                //    --
+            Variable* tt = opAdditive(a, TokenType::MINUS, tmp);
+			Variable* tt2 = Variable::assign(&a, tt);
+            tt->release();
+            tt2->release();
             break;
+        }
         default :
             throw ExpressionException();
             break;

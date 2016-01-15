@@ -33,140 +33,205 @@ void Parser::printError(){
 }
 
 
-TreeNode* Parser::syFunctionDeclaration(){
-    TreeNode* t = new TreeNode(scanner->getLine(), FunctionDeclaration);
+TreeNode* Parser::syFunctionDeclaration(TreeNode* t){
+    t = new TreeNode(scanner->getLine(), FunctionDeclaration, t);
     TreeNode* c = NULL;
     match(FUNCTION);
-    c = t->child = syIdentifier();
+    c = t->child = syIdentifier(t);
     match(LPSMALL);
     if (token.type != RPSMALL)
-        c = c->sibling = syFormalParameterList();
+        c = c->sibling = syFormalParameterList(t);
     match(RPSMALL);
-    c = c->sibling = syFunctionBody();
+    c = c->sibling = syFunctionBody(t);
     return t;
 }
 
-TreeNode* Parser::syIdentifier(){
-    TreeNode* t = new TreeNode(scanner->getLine(), Identifier);
+TreeNode* Parser::syIdentifier(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), Identifier, t);
     t->token = token;
     TreeNode* c = NULL;
     match(ID);
     return t;
 }
 
-TreeNode* Parser::syFormalParameterList(){
-    TreeNode* t = new TreeNode(scanner->getLine(), FormalParameterList);
+TreeNode* Parser::syFormalParameterList(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), FormalParameterList, t);
     TreeNode* c = NULL;
-    c = t->child = syIdentifier();
+    c = t->child = syIdentifier(t);
     while (token.type == COMMA){
         match(COMMA);
-        c = c->sibling = syIdentifier();
+        c = c->sibling = syIdentifier(t);
     }
     return t;
 }
 
-TreeNode* Parser::syFunctionBody(){
-    TreeNode* t = new TreeNode(scanner->getLine(), FunctionBody);
+TreeNode* Parser::syFunctionBody(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), FunctionBody, t);
     TreeNode* c = NULL;
     match(LPBIG);
     if (token.type != RPBIG)
-        c = t->child = sySourceElements();
+        c = t->child = sySourceElements(t);
     match(RPBIG);
     return t;
 }
 
-TreeNode* Parser::sySourceElements(){
-    TreeNode* t = new TreeNode(scanner->getLine(), SourceElements);
+TreeNode* Parser::sySourceElements(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), SourceElements, t);
     TreeNode* c = NULL;
-    c = t->child = sySourceElement();
+    c = t->child = sySourceElement(t);
 	while (token.type != RPBIG && token.type != ENDFILE)
-        c = c->sibling = sySourceElement();
+        c = c->sibling = sySourceElement(t);
     return t;
 }
 
-TreeNode* Parser::sySourceElement(){
-    TreeNode* t = new TreeNode(scanner->getLine(), SourceElement);
+TreeNode* Parser::sySourceElement(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), SourceElement, t);
     TreeNode* c = NULL;
     if (token.type == FUNCTION)
-        c = t->child = syFunctionDeclaration();
+        c = t->child = syFunctionDeclaration(t);
     else
-        c = t->child = syStatement();
+        c = t->child = syStatement(t);
     return t;
 }
 
-TreeNode* Parser::syStatement(){   //incomplete
-    TreeNode* t = new TreeNode(scanner->getLine(), Statement);
+TreeNode* Parser::syStatement(TreeNode* t){   //incomplete
+	t = new TreeNode(scanner->getLine(), Statement, t);
     TreeNode* c = NULL;
     switch (token.type){
         case VAR:
-            c = t->child = syVariableStatement();
+            c = t->child = syVariableStatement(t);
             break;
+		case RETURN:
+			c = t->child = syReturnStatement(t);
+			break;
+		case IF:
+			c = t->child = syIfStatement(t);
+			break;
         default:
-            c = t->child = syExpressionStatement();
+            c = t->child = syExpressionStatement(t);
     }
     return t;
 }
 
-TreeNode* Parser::syExpressionStatement(){
-    TreeNode* t = new TreeNode(scanner->getLine(), ExpressionStatement);
+TreeNode* Parser::syIfStatement(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), IfStatement, t);
+	TreeNode* c = NULL;
+	match(IF);
+	match(LPSMALL);
+	c = t->child = syExpression(t);
+	match(RPSMALL);
+	c = c->sibling = syStatement(t);
+	if (token.type == ELSE){
+		match(ELSE);
+		c->sibling = syStatement(t);
+	}
+	return t;
+}
+
+TreeNode* Parser::syReturnStatement(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), ReturnStatement, t);
+	TreeNode* c = NULL;
+	match(RETURN);
+	switch (token.type) {
+		case ID:
+		case LPSMALL:
+		case INTEGER:
+		case DECIMAL:
+		case HEX:
+		case STRING:
+		case VBOOLEAN:
+		case NIL:
+		case NANUMBER:
+		case UNDEFINED:
+		case INF:
+		case FUNCTION:
+		case THIS:
+			c = t->child = syExpression(t);
+			break;
+		default:
+			break;
+	}
+	if (token.type == SEMI) match(SEMI);
+	return t;
+}
+
+TreeNode* Parser::syExpressionStatement(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), ExpressionStatement, t);
     TreeNode* c = NULL;
-    c = t->child = syExpression();
+    c = t->child = syExpression(t);
     if (token.type == SEMI) match(SEMI);
     return t;
 }
 
-TreeNode* Parser::syExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), Expression);
+TreeNode* Parser::syExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), Expression, t);
     TreeNode* c = NULL;
-    c = t->child = syAssignmentExpression();
+    c = t->child = syAssignmentExpression(t);
 	while (token.type == COMMA){
         match(COMMA);
-        c = c->sibling = syAssignmentExpression();
+        c = c->sibling = syAssignmentExpression(t);
     }
     return t;
 }
 
-TreeNode* Parser::syAssignmentExpression(){       //AssignmentExpression -> ( LeftHandSideExpression AssignmentOperator AssignmentExpression ) | ( ConditionalExpression )
-    TreeNode* t = new TreeNode(scanner->getLine(), AssignmentExpression);
+TreeNode* Parser::syAssignmentExpression(TreeNode* t){       //AssignmentExpression -> ( LeftHandSideExpression AssignmentOperator AssignmentExpression ) | ( ConditionalExpression )
+	t = new TreeNode(scanner->getLine(), AssignmentExpression, t);
     TreeNode* c = NULL;
-	reservedLeftExpressions.push_back(syLeftHandSideExpression());
 
-	switch (token.type){
-		case ASSIGN:
-		case TASSIGN:
-		case MODASSIGN:
-		case PASSIGN:
-		case MINUSASSIGN:
-		case ANDASSIGN:
-		case OASSIGN:
-		case XORASSIGN:
-		case ORASSIGN:
-			c = t->child = reservedLeftExpressions.back();
-			reservedLeftExpressions.pop_back();
-			c = c->sibling = syAssignmentOperator();
-			c = c->sibling = syAssignmentExpression();
+	    switch (token.type) {
+        case DELETE:
+        case VOID:
+        case TYPEOF:
+        case INCREASE:
+        case DECREASE:
+        case PLUS:
+        case MINUS:
+        case REVERSE:
+        case NOT:
+			c = t->child = syConditionalExpression(t);
+            break;
+		default:{
+
+			reservedLeftExpressions.push_back(syLeftHandSideExpression(t));
+			switch (token.type){
+			case ASSIGN:
+			case TASSIGN:
+			case MODASSIGN:
+			case PASSIGN:
+			case MINUSASSIGN:
+			case ANDASSIGN:
+			case OASSIGN:
+			case XORASSIGN:
+			case ORASSIGN:
+				c = t->child = reservedLeftExpressions.back();
+				reservedLeftExpressions.pop_back();
+				c = c->sibling = syAssignmentOperator(t);
+				c = c->sibling = syAssignmentExpression(t);
+				break;
+			default:
+				c = t->child = syConditionalExpression(t);
+				break;
+			}
+			return t;
 			break;
-		default:
-			c = t->child = syConditionalExpression();
-			break;
-	}
-    return t;
+		}
+    }
 }
 
-TreeNode* Parser::syLeftHandSideExpression(){      //LeftHandSideExpression -> MemberExpression [ Arguments ( CallExpressionPart )* ];
-    TreeNode* t = new TreeNode(scanner->getLine(), LeftHandSideExpression);
+TreeNode* Parser::syLeftHandSideExpression(TreeNode* t){      //LeftHandSideExpression -> MemberExpression [ Arguments ( CallExpressionPart )* ];
+	t = new TreeNode(scanner->getLine(), LeftHandSideExpression, t);
     TreeNode* c = NULL;
-    c = t->child = syMemberExpression();
+    c = t->child = syMemberExpression(t);
     if (token.type == LPSMALL){
-        c = c->sibling = syArguments();
+        c = c->sibling = syArguments(t);
         while (token.type == LPSMALL || token.type == LPMID || token.type == DOT)
-            c = c->sibling = syCallExpressionPart();
+            c = c->sibling = syCallExpressionPart(t);
     }
     return t;
 }
 
-TreeNode* Parser::syMemberExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), MemberExpression);
+TreeNode* Parser::syMemberExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), MemberExpression, t);
     TreeNode* c = NULL;
 
     if (token.type == NEW){                 //incomplete
@@ -174,86 +239,86 @@ TreeNode* Parser::syMemberExpression(){
     }
     else{
         if (token.type == FUNCTION)
-            c = t->child = syFunctionExpression();
+            c = t->child = syFunctionExpression(t);
         else
-            c = t->child = syPrimaryExpression();
+            c = t->child = syPrimaryExpression(t);
         while (token.type == LPMID || token.type == DOT){
-            c = c->sibling = syMemberExpressionPart();
+            c = c->sibling = syMemberExpressionPart(t);
         }
     }
     return t;
 }
 
-TreeNode* Parser::syMemberExpressionPart(){
-	TreeNode* t = new TreeNode(scanner->getLine(), MemberExpressionPart);
+TreeNode* Parser::syMemberExpressionPart(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), MemberExpressionPart, t);
     TreeNode* c = NULL;
 
     if (token.type == LPMID){
         match(LPMID);
-        c = t->child = syExpression();
+        c = t->child = syExpression(t);
         match(RPMID);
     }
     else {
         match(DOT);
-        c = t->child = syIdentifier();
+        c = t->child = syIdentifier(t);
     }
     return t;
 }
 
-TreeNode* Parser::syCallExpressionPart(){
-    TreeNode* t = new TreeNode(scanner->getLine(), CallExpressionPart);
+TreeNode* Parser::syCallExpressionPart(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), CallExpressionPart, t);
     TreeNode* c = NULL;
     if (token.type == LPSMALL)
-        c = t->child = syArguments();
+        c = t->child = syArguments(t);
     else if (token.type == LPMID) {
             match(LPMID);
-            c = t->child = syExpression();
+            c = t->child = syExpression(t);
             match(RPMID);
     }
     else {
         match(DOT);
-        c = t->child = syIdentifier();
+        c = t->child = syIdentifier(t);
     }
     return t;
 }
 
-TreeNode* Parser::syArguments(){
-    TreeNode* t = new TreeNode(scanner->getLine(), Arguments);
+TreeNode* Parser::syArguments(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), Arguments, t);
     TreeNode* c = NULL;
     match(LPSMALL);
     if (token.type != RPSMALL)
-        c = t->child = syArgumentList();
+        c = t->child = syArgumentList(t);
     match(RPSMALL);
     return t;
 }
 
-TreeNode* Parser::syArgumentList(){
-    TreeNode* t = new TreeNode(scanner->getLine(), ArgumentList);
+TreeNode* Parser::syArgumentList(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), ArgumentList, t);
     TreeNode* c = NULL;
-    c = t->child = syAssignmentExpression();
+    c = t->child = syAssignmentExpression(t);
     while (token.type == COMMA){
         match(COMMA);
-        c = c->sibling = syAssignmentExpression();
+        c = c->sibling = syAssignmentExpression(t);
     }
     return t;
 }
 
-TreeNode* Parser::syFunctionExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), FunctionExpression);
+TreeNode* Parser::syFunctionExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), FunctionExpression, t);
     TreeNode* c = NULL;
     match(FUNCTION);
-    if (token.type == ID) c = t->child = syIdentifier();
-    else c = t->child = new TreeNode(scanner->getLine(), Identifier);
+    if (token.type == ID) c = t->child = syIdentifier(t);
+    else c = t->child = new TreeNode(scanner->getLine(), Identifier, t);
     match(LPSMALL);
     if (token.type != RPSMALL)
-        c = t->child = syFormalParameterList();
+        c = t->child = syFormalParameterList(t);
     match(RPSMALL);
-    c = c->sibling = syFunctionBody();
+    c = c->sibling = syFunctionBody(t);
     return t;
 }
 
-TreeNode* Parser::syAssignmentOperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), AssignmentOperator);
+TreeNode* Parser::syAssignmentOperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), AssignmentOperator, t);
     TreeNode* c = NULL;
 	t->token = token;
     switch (token.type){
@@ -290,135 +355,135 @@ TreeNode* Parser::syAssignmentOperator(){
     return t;
 }
 
-TreeNode* Parser::syConditionalExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), ConditionalExpression);
+TreeNode* Parser::syConditionalExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), ConditionalExpression, t);
     TreeNode* c = NULL;
-    c = t->child = syLogicalORExpression();
+    c = t->child = syLogicalORExpression(t);
     if (token.type == QUES) {
         match(QUES);
-        c = c->sibling = syAssignmentExpression();
+        c = c->sibling = syAssignmentExpression(t);
         match(COLON);
-        c = c->sibling = syAssignmentExpression();
+        c = c->sibling = syAssignmentExpression(t);
     }
     return t;
 }
 
-TreeNode* Parser::syLogicalORExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), LogicalORExpression);
+TreeNode* Parser::syLogicalORExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), LogicalORExpression, t);
     TreeNode* c = NULL;
-    c = t->child = syLogicalANDExpression();
+    c = t->child = syLogicalANDExpression(t);
     while (token.type == OROR){
-        c = c->sibling = syLogicalOROperator();
-        c = c->sibling = syLogicalANDExpression();
+        c = c->sibling = syLogicalOROperator(t);
+        c = c->sibling = syLogicalANDExpression(t);
     }
     return t;
 }
 
-TreeNode* Parser::syLogicalOROperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), LogicalOROperator);
+TreeNode* Parser::syLogicalOROperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), LogicalOROperator, t);
     TreeNode* c = NULL;
 	t->token = token;
     match(OROR);
     return t;
 }
 
-TreeNode* Parser::syLogicalANDExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), LogicalANDExpression);
+TreeNode* Parser::syLogicalANDExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), LogicalANDExpression, t);
     TreeNode* c = NULL;
-    c = t->child = syBitwiseORExpression();
+    c = t->child = syBitwiseORExpression(t);
     while (token.type == ANDAND){
-        c = c->sibling = syLogicalANDExpression();
-        c = c->sibling = syBitwiseORExpression();
+        c = c->sibling = syLogicalANDExpression(t);
+        c = c->sibling = syBitwiseORExpression(t);
     }
     return t;
 }
 
-TreeNode* Parser::syLogicalANDOperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), LogicalANDOperator);
+TreeNode* Parser::syLogicalANDOperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), LogicalANDOperator, t);
     TreeNode* c = NULL;
 	t->token = token;
     match(ANDAND);
     return t;
 }
 
-TreeNode* Parser::syBitwiseORExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), BitwiseORExpression);
+TreeNode* Parser::syBitwiseORExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), BitwiseORExpression, t);
     TreeNode* c = NULL;
-    c = t->child = syBitwiseXORExpression();
+    c = t->child = syBitwiseXORExpression(t);
     while (token.type == OR){
-        c = c->sibling = syBitwiseOROperator();
-        c = c->sibling = syBitwiseXORExpression();
+        c = c->sibling = syBitwiseOROperator(t);
+        c = c->sibling = syBitwiseXORExpression(t);
     }
     return t;
 }
 
-TreeNode* Parser::syBitwiseOROperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), BitwiseOROperator);
+TreeNode* Parser::syBitwiseOROperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), BitwiseOROperator, t);
 	t->token = token;
     match(OR);
     return t;
 }
 
-TreeNode* Parser::syBitwiseXORExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), BitwiseXORExpression);
+TreeNode* Parser::syBitwiseXORExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), BitwiseXORExpression, t);
     TreeNode* c = NULL;
-    c = t->child = syBitwiseANDExpression();
+    c = t->child = syBitwiseANDExpression(t);
     while (token.type == XOR){
-        c = c->sibling = syBitwiseXOROperator();
-        c = c->sibling = syBitwiseANDExpression();
+        c = c->sibling = syBitwiseXOROperator(t);
+        c = c->sibling = syBitwiseANDExpression(t);
     }
     return t;
 }
 
-TreeNode* Parser::syBitwiseXOROperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), BitwiseXOROperator);
+TreeNode* Parser::syBitwiseXOROperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), BitwiseXOROperator, t);
 	t->token = token;
     match(XOR);
     return t;
 }
 
-TreeNode* Parser::syBitwiseANDExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), BitwiseANDExpression);
+TreeNode* Parser::syBitwiseANDExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), BitwiseANDExpression, t);
     TreeNode* c = NULL;
-    c = t->child = syEqualityExpression();
+    c = t->child = syEqualityExpression(t);
     while (token.type == AND){
-        c = c->sibling = syBitwiseANDOperator();
-        c = c->sibling = syEqualityExpression();
+        c = c->sibling = syBitwiseANDOperator(t);
+        c = c->sibling = syEqualityExpression(t);
     }
     return t;
 }
 
-TreeNode* Parser::syBitwiseANDOperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), BitwiseANDOperator);
+TreeNode* Parser::syBitwiseANDOperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), BitwiseANDOperator, t);
 	t->token = token;
     match(AND);
     return t;
 }
 
 
-TreeNode* Parser::syEqualityExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), EqualityExpression);
+TreeNode* Parser::syEqualityExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), EqualityExpression, t);
     TreeNode* c = NULL;
-    c = t->child = syRelationalExpression();
+    c = t->child = syRelationalExpression(t);
     while (token.type == EQUAL || token.type == UNEQUAL){  //incomplete
-        c = c->sibling = syEqualityOperator();
-        c = c->sibling = syRelationalExpression();
+        c = c->sibling = syEqualityOperator(t);
+        c = c->sibling = syRelationalExpression(t);
     }
     return t;
 }
 
-TreeNode* Parser::syEqualityOperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), EqualityOperator);
+TreeNode* Parser::syEqualityOperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), EqualityOperator, t);
 	t->token = token;
     if (token.type == EQUAL) match(EQUAL);
     else match(UNEQUAL);
     return t;
 }
 
-TreeNode* Parser::syRelationalExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), RelationalExpression);
+TreeNode* Parser::syRelationalExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), RelationalExpression, t);
     TreeNode* c = NULL;
-    c = t->child = syShiftExpression();
+    c = t->child = syShiftExpression(t);
     bool yes = true;;
     while (yes){
         switch (token.type) {
@@ -428,8 +493,8 @@ TreeNode* Parser::syRelationalExpression(){
             case GREATQUAL:
             case INSTANCEOF:
             case IN:
-                c = c->sibling = syRelationalOperator();
-                    c = c->sibling = syShiftExpression();
+                c = c->sibling = syRelationalOperator(t);
+                    c = c->sibling = syShiftExpression(t);
                 break;
             default:
                 yes = false;
@@ -439,8 +504,8 @@ TreeNode* Parser::syRelationalExpression(){
     return t;
 }
 
-TreeNode* Parser::syRelationalOperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), RelationalOperator);
+TreeNode* Parser::syRelationalOperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), RelationalOperator, t);
 	t->token = token;
     switch (token.type) {
         case LESS:
@@ -468,17 +533,17 @@ TreeNode* Parser::syRelationalOperator(){
     return t;
 }
 
-TreeNode* Parser::syShiftExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), ShiftExpression);
+TreeNode* Parser::syShiftExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), ShiftExpression, t);
     TreeNode* c = NULL;
-    c = t->child = syAdditiveExpression();
+    c = t->child = syAdditiveExpression(t);
     bool yes = true;;
     while (yes){
         switch (token.type) {           //incomplete
             case LSHIFT:
             case RSHIFT:
-                c = c->sibling = syShiftOperator();
-                c = c->sibling = syAdditiveExpression();
+                c = c->sibling = syShiftOperator(t);
+                c = c->sibling = syAdditiveExpression(t);
             default:
                 yes = false;
                 break;
@@ -487,8 +552,8 @@ TreeNode* Parser::syShiftExpression(){
     return t;
 }
 
-TreeNode* Parser::syShiftOperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), ShiftOperator);
+TreeNode* Parser::syShiftOperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), ShiftOperator, t);
 	t->token = token;
     switch (token.type) {
         case LSHIFT:
@@ -504,17 +569,18 @@ TreeNode* Parser::syShiftOperator(){
     return t;
 }
 
-TreeNode* Parser::syAdditiveExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), AdditiveExpression);
+TreeNode* Parser::syAdditiveExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), AdditiveExpression, t);
     TreeNode* c = NULL;
-    c = t->child = syMultiplicativeExpression();
+    c = t->child = syMultiplicativeExpression(t);
     bool yes = true;;
     while (yes){
         switch (token.type) {
             case PLUS:
             case MINUS:
-                c = c->sibling = syAdditiveOperator();
-                c = c->sibling = syMultiplicativeExpression();
+                c = c->sibling = syAdditiveOperator(t);
+                c = c->sibling = syMultiplicativeExpression(t);
+				break;
             default:
                 yes = false;
                 break;
@@ -523,8 +589,8 @@ TreeNode* Parser::syAdditiveExpression(){
     return t;
 }
 
-TreeNode* Parser::syAdditiveOperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), AdditiveOperator);
+TreeNode* Parser::syAdditiveOperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), AdditiveOperator, t);
 	t->token = token;
     switch (token.type) {
         case PLUS:
@@ -540,18 +606,18 @@ TreeNode* Parser::syAdditiveOperator(){
     return t;
 }
 
-TreeNode* Parser::syMultiplicativeExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), MultiplicativeExpression);
+TreeNode* Parser::syMultiplicativeExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), MultiplicativeExpression, t);
     TreeNode* c = NULL;
-    c = t->child = syUnaryExpression();
+    c = t->child = syUnaryExpression(t);
     bool yes = true;;
     while (yes){
         switch (token.type) {
             case TIMES:
             case OVER:
             case MOD:
-                c = c->sibling = syMultiplicativeOperator();
-                c = c->sibling = syUnaryExpression();
+                c = c->sibling = syMultiplicativeOperator(t);
+                c = c->sibling = syUnaryExpression(t);
 				break;
             default:
                 yes = false;
@@ -562,8 +628,8 @@ TreeNode* Parser::syMultiplicativeExpression(){
 }
 
 
-TreeNode*  Parser::syMultiplicativeOperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), MultiplicativeOperator);
+TreeNode*  Parser::syMultiplicativeOperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), MultiplicativeOperator, t);
 	t->token = token;
     switch (token.type) {
         case TIMES:
@@ -582,51 +648,35 @@ TreeNode*  Parser::syMultiplicativeOperator(){
     return t;
 }
 
-TreeNode*  Parser::syUnaryExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), UnaryExpression);
+TreeNode*  Parser::syUnaryExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), UnaryExpression, t);
     TreeNode* c = NULL;
-	bool yes = true;
-    switch (token.type) {
-        case DELETE:
-        case VOID:
-        case TYPEOF:
-        case INCREASE:
-        case DECREASE:
-        case PLUS:
-        case MINUS:
-        case REVERSE:
-        case NOT:
-            c = t->child = syUnaryOperator();
-            c = c->sibling = syUnaryExpression();
-            while (yes){
-                switch (token.type) {
-                    case DELETE:
-                    case VOID:
-                    case TYPEOF:
-                    case INCREASE:
-                    case DECREASE:
-                    case PLUS:
-                    case MINUS:
-                    case REVERSE:
-                    case NOT:
-                        c = c->sibling = syUnaryOperator();
-                        c = c->sibling = syUnaryExpression();
-                    default:
-                        yes = false;
-                        break;
-                }
-            }
-            break;
-        default:
-            c = t->child = syPostfixExpression();
-            break;
-    }
+	if (reservedLeftExpressions.empty()){
+		switch (token.type) {
+		case DELETE:
+		case VOID:
+		case TYPEOF:
+		case INCREASE:
+		case DECREASE:
+		case PLUS:
+		case MINUS:
+		case REVERSE:
+		case NOT:
+			c = t->child = syUnaryOperator(t);
+			c = c->sibling = syUnaryExpression(t);
+			break;
+		default:
+			c = t->child = syPostfixExpression(t);
+			break;
+		}
+	} else
+		c = t->child = syPostfixExpression(t);
     return t;
 }
 
 
-TreeNode*  Parser::syUnaryOperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), UnaryOperator);
+TreeNode*  Parser::syUnaryOperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), UnaryOperator, t);
 	t->token = token;
     switch (token.type) {
         case DELETE:
@@ -664,76 +714,76 @@ TreeNode*  Parser::syUnaryOperator(){
 }
 
 
-TreeNode*  Parser::syPostfixExpression(){
-	TreeNode* t = new TreeNode(scanner->getLine(), PostfixExpression);
+TreeNode*  Parser::syPostfixExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), PostfixExpression, t);
 	TreeNode* c = NULL;
 	if (reservedLeftExpressions.empty())
-		c = t->child = syLeftHandSideExpression();
+		c = t->child = syLeftHandSideExpression(t);
 	else{
 		c = t->child = reservedLeftExpressions.back();
 		reservedLeftExpressions.pop_back();
 	}
     if (token.type == INCREASE || token.type == DECREASE)
-        c = c->sibling = syPostfixOperator();
+        c = c->sibling = syPostfixOperator(t);
     return t;
 }
 
-TreeNode* Parser::syPostfixOperator(){
-    TreeNode* t = new TreeNode(scanner->getLine(), PostfixOperator);
+TreeNode* Parser::syPostfixOperator(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), PostfixOperator, t);
     t->token = token;
     if (token.type == INCREASE) match(INCREASE);
     else match(DECREASE);
     return t;
 }
 
-TreeNode* Parser::syVariableStatement(){
-    TreeNode* t = new TreeNode(scanner->getLine(), VariableStatement);
+TreeNode* Parser::syVariableStatement(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), VariableStatement, t);
     TreeNode* c = NULL;
     match(VAR);
-    c = t->child = syVariableDeclarationList();
+    c = t->child = syVariableDeclarationList(t);
     if (token.type == SEMI)
         match(SEMI);
     return t;
 }
 
-TreeNode* Parser::syVariableDeclarationList(){
-    TreeNode* t = new TreeNode(scanner->getLine(), VariableDeclarationList);
+TreeNode* Parser::syVariableDeclarationList(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), VariableDeclarationList, t);
     TreeNode* c = NULL;
-    c = t->child = syVariableDeclaration();
+    c = t->child = syVariableDeclaration(t);
     while (token.type == COMMA){
         match(COMMA);
-        c = c->sibling = syVariableDeclaration();
+        c = c->sibling = syVariableDeclaration(t);
     }
     return t;
 }
 
-TreeNode* Parser::syVariableDeclaration(){
-    TreeNode* t = new TreeNode(scanner->getLine(), VariableDeclaration);
+TreeNode* Parser::syVariableDeclaration(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), VariableDeclaration, t);
     TreeNode* c = NULL;
-    c = t->child = syIdentifier();
+    c = t->child = syIdentifier(t);
     if (token.type == ASSIGN)
-        c = c->sibling = syInitialiser();
+        c = c->sibling = syInitialiser(t);
     return t;
 }
 
-TreeNode* Parser::syInitialiser(){
-    TreeNode* t = new TreeNode(scanner->getLine(), Initialiser);
+TreeNode* Parser::syInitialiser(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), Initialiser, t);
     TreeNode* c = NULL;
     match(ASSIGN);
-    c = t->child = syAssignmentExpression();
+    c = t->child = syAssignmentExpression(t);
     return t;
 }
 
-TreeNode* Parser::syPrimaryExpression(){
-    TreeNode* t = new TreeNode(scanner->getLine(), PrimaryExpression);
+TreeNode* Parser::syPrimaryExpression(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), PrimaryExpression, t);
     TreeNode* c = NULL;
     switch (token.type) {
         case ID:
-            c = t->child = syIdentifier();
+            c = t->child = syIdentifier(t);
             break;
         case LPSMALL:
             match(LPSMALL);
-            c = t->child = syExpression();
+            c = t->child = syExpression(t);
             match(RPSMALL);
             break;
         case INTEGER:
@@ -745,16 +795,16 @@ TreeNode* Parser::syPrimaryExpression(){
 		case NANUMBER:
 		case UNDEFINED:
 		case INF:
-            c = t->child = syLiteral();
+            c = t->child = syLiteral(t);
             break;
         case LPMID:
-            c = t->child = syArrayLiteral();
+            c = t->child = syArrayLiteral(t);
             break;
         case THIS:
             //match(THIS);          //incomplete
             //break;
         case LPBIG:
-            //c = t->child = syObjectLiteral();
+            //c = t->child = syObjectLiteral(t);
             //break;
         default:
             throw ParserException();
@@ -762,8 +812,8 @@ TreeNode* Parser::syPrimaryExpression(){
     return t;
 }
 
-TreeNode* Parser::syLiteral(){
-    TreeNode* t = new TreeNode(scanner->getLine(), Literal);
+TreeNode* Parser::syLiteral(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), Literal, t);
     TreeNode* c = NULL;
     t->token = token;
     switch (token.type) {
@@ -800,17 +850,17 @@ TreeNode* Parser::syLiteral(){
     return t;
 }
 
-TreeNode* Parser::syArrayLiteral(){
-    TreeNode* t = new TreeNode(scanner->getLine(), ArrayLiteral);
+TreeNode* Parser::syArrayLiteral(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), ArrayLiteral, t);
     TreeNode* c = NULL;
     match(LPMID);
     while (token.type != RPMID){
         if (token.type == COMMA)
-            if (t->child == NULL) c = t->child = syElision();
-            else c = c->sibling = syElision();
+            if (t->child == NULL) c = t->child = syElision(t);
+            else c = c->sibling = syElision(t);
         else {
-            if (t->child == NULL) c = t->child = syAssignmentExpression();
-            else c = c->sibling = syAssignmentExpression();
+            if (t->child == NULL) c = t->child = syAssignmentExpression(t);
+            else c = c->sibling = syAssignmentExpression(t);
             if (token.type != ']') match(COMMA);
         }
     }
@@ -818,8 +868,8 @@ TreeNode* Parser::syArrayLiteral(){
     return t;
 }
 
-TreeNode* Parser::syElision(){
-    TreeNode* t = new TreeNode(scanner->getLine(), Elision);
+TreeNode* Parser::syElision(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), Elision, t);
     TreeNode* c = NULL;
     t->token.value = "";
 	t->token.type = COMMA;
@@ -832,11 +882,11 @@ TreeNode* Parser::syElision(){
     return t;
 }
 
-TreeNode* Parser::syProgram(){
-    TreeNode* t = new TreeNode(scanner->getLine(), Program);
+TreeNode* Parser::syProgram(TreeNode* t){
+	t = new TreeNode(scanner->getLine(), Program, t);
     TreeNode* c = NULL;
     if (token.type != ENDFILE)
-        c = t->child = sySourceElements();
+        c = t->child = sySourceElements(t);
     match(ENDFILE);
     return t;
 }

@@ -1,10 +1,12 @@
-a = 1;
-b = a + 2
-c = 1 + 2 * 3 / 4 + !5
+var a = 1;
+var b = a + 2
+var c = 1 + 2 * 3 / 4 + a * b
 
-c = "123456\f"
-c = '123abc\n\t'
-d = Infinity
-s = NaN
-k = null
-t = undefined
+var d = Infinity
+var s = NaN
+var k = null
+var t = undefined
+output("a="+a);
+output("b="+b);
+output("c="+c);
+output("t="+-t);

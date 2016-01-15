@@ -19,7 +19,8 @@ typedef enum{
 	BitwiseXOROperator, BitwiseANDOperator, EqualityOperator, RelationalOperator,
 	ShiftOperator, AdditiveOperator, MultiplicativeOperator, UnaryOperator, PostfixOperator,
 	AssignmentOperator ,VariableStatement, VariableDeclarationList, VariableDeclaration,
-	Initialiser, PrimaryExpression, Literal, ArrayLiteral, Program
+	Initialiser, PrimaryExpression, Literal, ArrayLiteral, Program, ReturnStatement,
+	IfStatement,
 } NodeKind;
 
 typedef enum{
@@ -27,7 +28,7 @@ typedef enum{
 	ENDFILE, ERROR,
 	/* reserved words */
 	BREAK, CASE, CATCH, CONTINUE, DEFAULT, DELETE, DO,
-	FINALLY, FOR, FUNCTION, IF, IN, INSTANCEOF, NEW, RETURN,
+	FINALLY, FOR, FUNCTION, IF, IN, INSTANCEOF, NEW, RETURN, ELSE,
 	SWITCH, THIS, THROW, TRY, TYPEOF, VAR, VOID, WHILE, WITH,
 	ABSTRACT, BOOLEAN, TYPE, CHAR, CLASS, CONST, DEBUGGER, DOUBLE,
 	ENUM, EXPORT, EXTENDS, FINAL, FLOAT, GOTO, IMPLEMENTS, IMPORT,
@@ -57,12 +58,13 @@ struct Token
 class TreeNode{
 public:
     NodeKind kind;
+	TreeNode* parent;
     TreeNode* child;
     TreeNode* sibling;
     Token token;
     int line;
 
-    TreeNode(int line, NodeKind kind);
+    TreeNode(int line, NodeKind kind, TreeNode* parent);
     ~TreeNode();
 };
 
@@ -70,5 +72,6 @@ public:
 class ScannerException : public exception{};
 class ParserException : public exception{};
 class ExpressionException : public exception{};
+class ExecutionException : public exception{};
 
 #endif

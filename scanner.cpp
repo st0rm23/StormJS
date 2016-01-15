@@ -556,6 +556,7 @@ Token Scanner::getToken(){
 }
 
 TokenType Scanner::resevedLookup(const string &str){
+	if (str == "else") return ELSE;
     if (str == "break") return BREAK;
     if (str == "case") return CASE;
     if (str == "catch") return CATCH;
@@ -687,6 +688,7 @@ string Scanner::getTokenName(TokenType type){
         case QUES: return "QUES";
         case ENDFILE: return "ENDFILE";
         case ERROR: return "ERROR";
+		case ELSE: return "ELSE";
 
         case BOOLEAN: return "BOOLEAN";
         case BREAK: return "BREAK";

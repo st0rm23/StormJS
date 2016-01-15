@@ -4,6 +4,7 @@
 #include "global.h"
 #include "variable.h"
 #include "expression.h"
+#include "execution.h"
 #include <iostream>
 
 using namespace std;
@@ -21,11 +22,13 @@ int main(){
 
 
 	printf("%s\n", Expression::opMultiplicative(var1, TokenType::TIMES, var2)->toString().c_str());*/
-    FILE* file = fopen("expression.js", "r");
+    FILE* file = fopen("function.js", "r");
 	Parser* parser = new Parser(file);
 	try{
-		TreeNode* node = parser->syProgram();
+		TreeNode* node = parser->syProgram(NULL);
 		fprintf(stderr, "\nsucceeding in parsing !\n");
+		Execution* execution = new Execution(node);
+		execution->exProgram(node);
 	}
 	catch (ParserException e){
 		parser->printError();

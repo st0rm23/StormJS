@@ -12,6 +12,7 @@ class VarBoolean;
 class VarUndefined;
 class VarObject;
 class VarFunction;
+class ActiveRecord;
 
 class Variable{
 public:
@@ -93,6 +94,9 @@ public:
 
 class VarFunction : public Variable{
 public:
+    TreeNode* value;
+    ActiveRecord* ar;
+
     VarFunction();
     VarBoolean* toVarBoolean();
     VarString* toVarString();

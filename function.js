@@ -1,23 +1,17 @@
-function myFunction(){
-    var a = 1.20e8;
-    var b = 1.2;
-    a += b;
-    a /= b;
-    a *= b;
-    a = a << b;
-    a = b >> a;
-    a |= b;
-    a &= b;
-    a ^= b;
+function fib(a){
+    var n = 1;
 
-
-
-
-    a > b;
-    a < b;
-    a >= b;
-    a <= b;
-    a % b;
-    a %= b;
-    alert("Hello World!");
+    function sb(){
+        n = n+1;
+        output(n);
+    }
+    return sb;
+    //return fib(a-1) + fib(a-2)
 }
+
+var func = fib(3);
+func();
+func();
+
+var ff = fib(4);
+ff();

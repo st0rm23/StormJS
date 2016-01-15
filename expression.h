@@ -16,7 +16,7 @@ public:
     static Variable* opAdditive(Variable *a, TokenType op, Variable *b);
     static Variable* opMultiplicative(Variable *a, TokenType op, Variable *b);
     static Variable* opUnary(TokenType op, Variable *a);
-    static Variable* opPostfix(Variable *a, TokenType op);
+	static Variable* opPostfix(Variable *&a, TokenType op);
 };
 
 #endif
